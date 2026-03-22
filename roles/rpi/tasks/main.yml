@@ -1,0 +1,93 @@
+---
+- name: Setting distribution_release shortcuts
+  ansible.builtin.set_fact:
+    is_bookworm: "{{ ansible_facts['distribution_release'] == 'bookworm' }}"
+    is_trixie: "{{ ansible_facts['distribution_release'] == 'trixie' }}"
+
+- name: check distribution_release is supported
+  ansible.builtin.fail:
+    msg: used Raspberry Pi OS distribution is not supported
+  when: not is_bookworm and not is_trixie
+
+### Enable wayland
+
+- name: check wayland is enabled
+  ansible.builtin.command: raspi-config nonint is_wayfire
+  ignore_errors: true
+  register: wayland
+  changed_when: wayland.rc != 0
+  when: is_bookworm
+
+- name: check wayland is enabled
+  ansible.builtin.command: raspi-config nonint is_labwc
+  ignore_errors: true
+  register: wayland
+  changed_when: wayland.rc != 0
+  when: is_trixie
+
+- name: enable wayland
+  ansible.builtin.command: raspi-config nonint do_wayland W2
+  when: wayland.rc != 0
+  notify: Reboot Pi
+
+### Enable autologin
+
+- name: check autologin is enabled
+  ansible.builtin.command: raspi-config nonint get_autologin
+  register: autologin
+  when: wayland.rc == 0
+  changed_when: autologin.rc != 0
+
+- name: enable autologin to desktop
+  ansible.builtin.command: raspi-config nonint do_boot_behaviour B4
+  when: wayland.rc == 0 and autologin.stdout != "0"
+  notify: Reboot Pi
+
+### Set timezone
+
+- name: check timezone
+  ansible.builtin.command: cat /etc/timezone
+  register: timezone
+  changed_when: timezone.rc != 0
+
+- name: change timezone
+  ansible.builtin.command: "raspi-config nonint do_change_timezone {{ nkc_timezone }}"
+  when: timezone.stdout != nkc_timezone
+  notify: Reboot Pi
+
+### Enable (or disable) vnc-server
+
+- name: check vnc-server is enabled
+  ansible.builtin.command: raspi-config nonint get_vnc
+  register: vnc
+  when: wayland.rc == 0
+  changed_when: false
+
+- name: enable vnc-server
+  ansible.builtin.command: raspi-config nonint do_vnc 0
+  when: nkc_kiosk_enable_vnc and wayland.rc == 0 and vnc.stdout != "0"
+
+- name: disable vnc-server
+  ansible.builtin.command: raspi-config nonint do_vnc 1
+  when: not nkc_kiosk_enable_vnc and wayland.rc == 0 and vnc.stdout == "0"
+
+# TODO: disable wayvnc auth
+
+### Configure NTP Client
+
+- name: copy ntp (client) configuration
+  template:
+    src: templates/timesyncd.conf.j2
+    dest: /etc/systemd/timesyncd.conf
+  when: timezone.stdout == nkc_timezone
+  notify: Restart Timesynced
+
+### Configure distribution specific autostart
+
+- name: Configure Bookworm specific autostart
+  include_tasks: bookworm.yml
+  when: is_bookworm
+
+- name: Configure Trixie specific autostart
+  include_tasks: trixie.yml
+  when: is_trixie

@@ -1,0 +1,9 @@
+---
+- name: Restart Timesynced
+  service:
+    name: systemd-timesyncd
+    state: restarted
+
+- name: Reboot Pi
+  ansible.builtin.reboot:
+    msg: "Rebooting machine due to Ansible run"

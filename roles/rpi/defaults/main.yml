@@ -1,0 +1,5 @@
+---
+nkc_timezone: Europe/Berlin
+nkc_kiosk_enable_vnc: false
+nkc_kiosk_ntp_server: kiosk-controller.domain
+nkc_kiosk_controller_url: "http://{{ nkc_kiosk_ntp_server }}"

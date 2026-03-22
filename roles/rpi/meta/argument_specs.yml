@@ -1,0 +1,24 @@
+argument_specs:
+  main:
+    short_description: configures Raspberry Pi to be a Kiosk, connected to NLPT-Kiosk-Controller
+    description: A role for configuring a Raspberry Pi to act as a Kiosk, that is connected to NLPT-Kiosk-Controller
+    author:
+      - Nils Ost (@nils-ost)
+    version_added: 1.0.0
+    options:
+      nkc_timezone:
+        type: "str"
+        required: false
+        default: "Europe/Berlin"
+      nkc_kiosk_enable_vnc:
+        type: "bool"
+        required: false
+        default: false
+      nkc_kiosk_ntp_server:
+        type: "str"
+        required: false
+        default: kiosk-controller.domain
+      nkc_kiosk_controller_url:
+        type: "str"
+        required: false
+        default: "http://{{ nkc_kiosk_ntp_server }}"

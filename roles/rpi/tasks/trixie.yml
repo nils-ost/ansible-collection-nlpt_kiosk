@@ -1,0 +1,37 @@
+---
+- name: install wtype
+  ansible.builtin.apt:
+    update_cache: true
+    name:
+      - wtype
+    state: present
+
+- name: copy rc.xml configuration
+  template:
+    src: templates/trixie/rc.xml.j2
+    dest: "/home/{{ ansible_user }}/.config/labwc/rc.xml"
+    owner: "{{ ansible_user }}"
+    mode: "0644"
+  notify: Reboot Pi
+
+- name: copy autostart configuration
+  template:
+    src: templates/trixie/autostart.j2
+    dest: "/home/{{ ansible_user }}/.config/labwc/autostart"
+    owner: "{{ ansible_user }}"
+    mode: "0644"
+  register: autostart_conf
+  notify: Reboot Pi
+
+- name: copy autostart configuration to etc
+  template:
+    src: templates/trixie/etc-autostart.j2
+    dest: /etc/xdg/labwc/autostart
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Reboot Pi
+
+- name: disable keyring
+  ansible.builtin.command: bash -c "chmod a-x /usr/bin/gnome-keyring*"
+  when: autostart_conf.changed

@@ -1,0 +1,9 @@
+---
+nkc_timezone: Europe/Berlin
+nkc_controller_compose_dir: /opt/nkc
+nkc_controller_release: latest
+nkc_controller_auto_upgrade: false
+
+nkc_controller_ntp_server: de.pool.ntp.org
+nkc_controller_bind_ip: 0.0.0.0
+nkc_controller_monitoring_ip: 0.0.0.0

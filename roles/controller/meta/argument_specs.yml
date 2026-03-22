@@ -1,0 +1,36 @@
+argument_specs:
+  main:
+    short_description: installs NLPT-Kiosk-Controller within docker
+    description: a role for installing NLPT-Kiosk-Controller as a docker container with the help of compose
+    author:
+      - Nils Ost (@nils-ost)
+    version_added: 1.0.0
+    options:
+      nkc_timezone:
+        type: "str"
+        required: false
+        default: "Europe/Berlin"
+      nkc_controller_compose_dir:
+        type: "str"
+        required: false
+        default: /opt/nkc
+      nkc_controller_release:
+        type: "str"
+        required: false
+        default: latest
+      nkc_controller_auto_upgrade:
+        type: "bool"
+        required: false
+        default: false
+      nkc_controller_ntp_server:
+        type: "str"
+        required: false
+        default: de.pool.ntp.org
+      nkc_controller_bind_ip:
+        type: "str"
+        required: false
+        default: 0.0.0.0
+      nkc_controller_monitoring_ip:
+        type: "str"
+        required: false
+        default: 0.0.0.0

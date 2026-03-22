@@ -1,0 +1,34 @@
+---
+- name: create compose directory
+  ansible.builtin.file:
+    path: "{{ nkc_controller_compose_dir }}"
+    state: directory
+    mode: "0755"
+  register: compose_dir
+
+- name: write compose file
+  ansible.builtin.template:
+    src: templates/docker-compose.yml.j2
+    dest: "{{ [nkc_controller_compose_dir, 'docker-compose.yml'] | path_join }}"
+    owner: root
+    group: root
+    mode: "0644"
+  register: compose_file
+
+- name: stop compose service
+  community.docker.docker_compose_v2:
+    project_src: "{{ nkc_controller_compose_dir }}"
+    remove_orphans: true
+    state: stopped
+    timeout: 11
+  when: compose_file.changed and not compose_dir.changed
+
+- name: start compose service
+  community.docker.docker_compose_v2:
+    project_src: "{{ nkc_controller_compose_dir }}"
+    remove_orphans: true
+    pull: "{{ nkc_controller_auto_upgrade | ternary('always', 'missing') }}"
+    state: present
+    wait: true
+    wait_timeout: 10
+  register: compose_start

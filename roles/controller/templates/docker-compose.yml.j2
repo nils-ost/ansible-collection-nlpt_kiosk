@@ -1,0 +1,62 @@
+services:
+  backend:
+    image: nilsost/nlpt-kiosk-controller-backend:{{ nkc_controller_release }}
+    restart: unless-stopped
+    depends_on:
+      - mongodb
+    environment:
+      - TZ={{ nkc_timezone }}
+      - MONGO_HOST=mongodb
+    ports:
+      - {{ nkc_controller_bind_ip }}:8765:8765
+      - {{ nkc_controller_monitoring_ip }}:8001:8001
+
+  frontend:
+    image: nilsost/nlpt-kiosk-controller-frontend:{{ nkc_controller_release }}
+    restart: unless-stopped
+    environment:
+      - TZ={{ nkc_timezone }}
+
+  haproxy:
+    image: nilsost/nlpt-kiosk-controller-haproxy:{{ nkc_controller_release }}
+    restart: unless-stopped
+    depends_on:
+      - backend
+      - frontend
+    environment:
+      - TZ={{ nkc_timezone }}
+    ports:
+      - {{ nkc_controller_bind_ip }}:80:80
+      - {{ nkc_controller_bind_ip }}:443:443
+      - {{ nkc_controller_monitoring_ip }}:8404:8404
+    sysctls:
+      - net.ipv4.ip_unprivileged_port_start=0
+
+  mongodb:
+    image: mongo:4.4
+    restart: unless-stopped
+    environment:
+      - TZ={{ nkc_timezone }}
+    volumes:
+      - ./mongo_data:/data/db:rw
+
+  minio:
+    image: minio/minio:RELEASE.2025-04-22T22-12-26Z
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      - TZ={{ nkc_timezone }}
+      - MINIO_ROOT_USER=nkc
+      - MINIO_ROOT_PASSWORD=password
+      - MINIO_PROMETHEUS_AUTH_TYPE=public
+    volumes:
+      - ./minio_data:/data:rw
+
+  timeserver:
+    image: cturra/ntp:latest
+    restart: unless-stopped
+    ports:
+      - {{ nkc_controller_bind_ip }}:123:123/udp
+    environment:
+      - TZ={{ nkc_timezone }}
+      - NTP_SERVERS={{ nkc_controller_ntp_server }}

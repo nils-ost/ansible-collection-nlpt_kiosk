@@ -1,0 +1,27 @@
+objects:
+  role:
+    controller:
+      description: installs NLPT-Kiosk-Controller within docker
+      name: controller
+      version_added: 1.0.0
+    rpi:
+      description: configures Raspberry Pi to be a Kiosk, connected to NLPT-Kiosk-Controller
+      name: rpi
+      version_added: 1.0.0
+plugins:
+  become: {}
+  cache: {}
+  callback: {}
+  cliconf: {}
+  connection: {}
+  filter: {}
+  httpapi: {}
+  inventory: {}
+  lookup: {}
+  module: {}
+  netconf: {}
+  shell: {}
+  strategy: {}
+  test: {}
+  vars: {}
+version: 1.0.0

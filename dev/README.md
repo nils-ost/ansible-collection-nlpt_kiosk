@@ -50,8 +50,8 @@ antsibull-changelog lint
 
 ```
 release_summary: |
-  This is the first proper release of ``nils_ost.nlpt_kiosk`` collection on 2026-03-22.
-  This release contains everything ... TBD
+  This is the first proper release of ``nils_ost.nlpt_kiosk`` collection on 2026-03-24.
+  This release contains everything that is needed to install an Kiosk-Controller and configure Raspberry Pis to act as Kiosks.
 ```
 
 ## setup to push to ansible-galaxy

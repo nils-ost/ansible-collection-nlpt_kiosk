@@ -1,5 +1,5 @@
 ---
-- name: Setting distribution_release shortcuts
+- name: setting distribution_release shortcuts
   ansible.builtin.set_fact:
     is_bookworm: "{{ ansible_facts['distribution_release'] == 'bookworm' }}"
     is_trixie: "{{ ansible_facts['distribution_release'] == 'trixie' }}"
@@ -9,20 +9,29 @@
     msg: used Raspberry Pi OS distribution is not supported
   when: not is_bookworm and not is_trixie
 
+- name: validate boot_mode
+  ansible.utils.validate:
+    data:
+      value: "{{ nkc_kiosk_boot_mode }}"
+    criteria:
+      - "{{ lookup('file',  '../criteria/nkc_kiosk_boot_mode.json') | from_json }}"
+    engine: ansible.utils.jsonschema
+  delegate_to: localhost
+
 ### Enable wayland
 
 - name: check wayland is enabled
   ansible.builtin.command: raspi-config nonint is_wayfire
   ignore_errors: true
   register: wayland
-  changed_when: wayland.rc != 0
+  changed_when: false
   when: is_bookworm
 
 - name: check wayland is enabled
   ansible.builtin.command: raspi-config nonint is_labwc
   ignore_errors: true
   register: wayland
-  changed_when: wayland.rc != 0
+  changed_when: false
   when: is_trixie
 
 - name: enable wayland
@@ -30,17 +39,21 @@
   when: wayland.rc != 0
   notify: Reboot Pi
 
+- name: Reboot Pi after enableing wayland
+  ansible.builtin.reboot:
+    msg: "Rebooting machine due to Ansible run"
+  when: wayland.rc != 0
+
 ### Enable autologin
 
 - name: check autologin is enabled
   ansible.builtin.command: raspi-config nonint get_autologin
   register: autologin
-  when: wayland.rc == 0
-  changed_when: autologin.rc != 0
+  changed_when: false
 
 - name: enable autologin to desktop
   ansible.builtin.command: raspi-config nonint do_boot_behaviour B4
-  when: wayland.rc == 0 and autologin.stdout != "0"
+  when: autologin.stdout != "0"
   notify: Reboot Pi
 
 ### Set timezone
@@ -48,7 +61,7 @@
 - name: check timezone
   ansible.builtin.command: cat /etc/timezone
   register: timezone
-  changed_when: timezone.rc != 0
+  changed_when: false
 
 - name: change timezone
   ansible.builtin.command: "raspi-config nonint do_change_timezone {{ nkc_timezone }}"
@@ -57,21 +70,34 @@
 
 ### Enable (or disable) vnc-server
 
-- name: check vnc-server is enabled
+- name: check if vnc-server is enabled
   ansible.builtin.command: raspi-config nonint get_vnc
   register: vnc
-  when: wayland.rc == 0
   changed_when: false
 
 - name: enable vnc-server
   ansible.builtin.command: raspi-config nonint do_vnc 0
-  when: nkc_kiosk_enable_vnc and wayland.rc == 0 and vnc.stdout != "0"
+  when: nkc_kiosk_enable_vnc and vnc.stdout != "0"
 
 - name: disable vnc-server
   ansible.builtin.command: raspi-config nonint do_vnc 1
-  when: not nkc_kiosk_enable_vnc and wayland.rc == 0 and vnc.stdout == "0"
+  when: not nkc_kiosk_enable_vnc and vnc.stdout == "0"
 
-# TODO: disable wayvnc auth
+- name: disable wayvnc auth
+  ansible.builtin.template:
+    src: templates/wayvnc.conf.j2
+    dest: /etc/wayvnc/config
+    owner: root
+    group: root
+    mode: "0644"
+  register: wayvnc_conf
+  when: nkc_kiosk_enable_vnc
+
+- name: Restart wayvnc
+  ansible.builtin.service:
+    name: wayvnc
+    state: restarted
+  when: wayvnc_conf.changed
 
 ### Configure NTP Client
 
@@ -84,10 +110,10 @@
 
 ### Configure distribution specific autostart
 
-- name: Configure Bookworm specific autostart
+- name: configure Bookworm specific autostart
   include_tasks: bookworm.yml
   when: is_bookworm
 
-- name: Configure Trixie specific autostart
+- name: configure Trixie specific autostart
   include_tasks: trixie.yml
   when: is_trixie

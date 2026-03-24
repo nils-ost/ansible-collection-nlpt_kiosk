@@ -44,7 +44,10 @@ After bootup configure the following basics:
 | nkc_kiosk_enable_vnc     | bool | false                               | wether to enable or disable (default) the VNC-server on Raspberry Pi |
 | nkc_kiosk_ntp_server     | str  | kiosk-controller.domain             | Domain of NLPT-Kiosk-Controller to be used a NTP-server              |
 | nkc_kiosk_controller_url | str  | "http://{{ nkc_kiosk_ntp_server }}" | Full URL where NLPT-Kiosk_Controller is reachable                    |
+| nkc_kiosk_boot_mode      | str  | kiosk                               | wether to boot pi to "desktop" or in "kiosk" mode                    |
 
+> [!NOTE]
+> `nkc_kiosk_boot_mode` only affects the wayland autostart feature, everything else is configured as usual for a Kiosk
 
 ## Full Example
 
@@ -59,7 +62,7 @@ After bootup configure the following basics:
   become: true
 
   roles:
-    - nlis_ost.nlpt_kiosk.rpi
+    - nils_ost.nlpt_kiosk.rpi
 ```
 
 ### Group Vars
@@ -69,4 +72,5 @@ After bootup configure the following basics:
 ```yaml
 ---
 ansible_user: pi
+nkc_kiosk_ntp_server: some.local.controller
 ```

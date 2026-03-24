@@ -1,4 +1,6 @@
 ---
+### boot_mode == kiosk
+
 - name: hide-cursor plugin config
   ansible.builtin.copy:
     src: files/hide-cursor.xml
@@ -6,6 +8,7 @@
     owner: root
     group: root
     mode: "0644"
+  when: nkc_kiosk_boot_mode == "kiosk"
 
 - name: hide-cursor plugin binary
   ansible.builtin.copy:
@@ -14,11 +17,24 @@
     owner: root
     group: root
     mode: "0755"
+  when: nkc_kiosk_boot_mode == "kiosk"
 
 - name: copy wayfire configuration
-  template:
-    src: templates/bookworm/wayfire.ini.j2
+  ansible.builtin.template:
+    src: templates/bookworm/wayfire-kiosk.ini.j2
     dest: "/home/{{ ansible_user }}/.config/wayfire.ini"
     owner: "{{ ansible_user }}"
     mode: "0644"
   notify: Reboot Pi
+  when: nkc_kiosk_boot_mode == "kiosk"
+
+### boot_mode == desktop
+
+- name: copy wayfire configuration
+  ansible.builtin.template:
+    src: templates/bookworm/wayfire-desktop.ini.j2
+    dest: "/home/{{ ansible_user }}/.config/wayfire.ini"
+    owner: "{{ ansible_user }}"
+    mode: "0644"
+  notify: Reboot Pi
+  when: nkc_kiosk_boot_mode == "desktop"

@@ -7,7 +7,7 @@ This repository contains the `nils_ost.nlpt_kiosk` Ansible Collection. For insta
 
 ## External requirements
 
-Currently none
+Requires python library `jsonschema` to validate variables. Please install via pip on ansible controller.
 
 ## Included content
 
@@ -19,6 +19,7 @@ Currently none
 Name | Description
 --- | ---
 [nils_ost.nlpt_kiosk.controller](https://github.com/nils-ost/ansible-collection-nlpt_kiosk/blob/main/roles/controller/README.md)|installs NLPT-Kiosk-Controller within docker
+[nils_ost.nlpt_kiosk.rpi](https://github.com/nils-ost/ansible-collection-nlpt_kiosk/blob/main/roles/rpi/README.md)|configures Raspberry Pi to be used as Kiosk
 
 ## Using this collection
 
